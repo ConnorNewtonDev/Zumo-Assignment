@@ -57,4 +57,6 @@ void rightHandler()
 void forwardHandler()
 {
   Serial.println("Move Forward");
+  //Check sensor
+  //Adjust if needed
 }
