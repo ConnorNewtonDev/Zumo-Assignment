@@ -7,6 +7,8 @@ public class AppHandler : MonoBehaviour
 {
     private SerialPort sp;
     private TextMeshProUGUI serialFeed;
+    public GameObject itemFoundPrefab;
+    public Transform gridParent;
 
     //Axis
     float dValue = 0;
@@ -148,8 +150,20 @@ public class AppHandler : MonoBehaviour
 
 
         #endregion
+
+      //  ListenForObj();
     }
 
+    void ListenForObj()
+    {
+        if (!sp.IsOpen)
+            sp.Open();
+        string msg = sp.ReadLine();
+        if(msg == "z")
+        {
+            Instantiate(itemFoundPrefab, gridParent);
+        }
+    }
 
     void WriteToSerial(string _msg)
     {

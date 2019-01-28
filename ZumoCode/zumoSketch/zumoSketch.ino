@@ -1,6 +1,6 @@
-#include <Wire.h>
 #include <ZumoShield.h>
 #include <NewPing.h>
+#include <Wire.h>
 
 #define LED 13
 #define SPEED 100
@@ -56,11 +56,6 @@ void handleMsg(int _msg)
   {
     Serial.println("Move Back");  
     motors.setSpeeds(-SPEED, -SPEED);
-  }
-  else if(msg == 's')
-  {
-    Serial.println("Stop");
-    motors.setSpeeds(0, 0);
   }
   else if(msg == 'a')
   {
@@ -137,6 +132,7 @@ void autoForward()
   msg ='i';
 }
 
+//Modifier to adjust left / right rotations
 void searchRoom(int modifier)
 {
     bool objInRoom = false;
@@ -153,9 +149,9 @@ void searchRoom(int modifier)
     float range = sonar.ping_cm();
     if(range < 17.5 && range > 2)
     {
-            objInRoom = true;
-          buzzer.play("L16 cdegreg4");
-    //while(buzzer.isPlaying());
+        objInRoom = true;
+        buzzer.play("L16 cdegreg4");
+        Serial.println('z');
     }
 
   }
@@ -163,7 +159,7 @@ void searchRoom(int modifier)
   motors.setSpeeds(modifier * SPEED, modifier * -SPEED);
   for(int i = 0; i < 30; i++)
   {
-    delay(50);                     // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+    delay(50);
     float range = sonar.ping_cm();
     if(range < 15 && range > 2)
       objInRoom = true;
