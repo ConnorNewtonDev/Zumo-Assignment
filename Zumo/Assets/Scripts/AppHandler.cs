@@ -133,7 +133,6 @@ public class AppHandler : MonoBehaviour
         // Y button
         if (CheckBtn("Y", ref yDown) == ChangeState.CHANGETRUE)
         {
-            sp.BaseStream.Flush();
             sp.Write("i");
             string temp = "Interrupt";
             serialFeed.text = temp;

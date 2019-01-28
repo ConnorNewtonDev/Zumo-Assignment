@@ -1,3 +1,7 @@
+#include <Wire.h>
+#include <ZumoShield.h>
+#include <NewPing.h>
+
 #define LED 13
 #define SPEED 100
 #define EDGELIMIT 500 
@@ -5,22 +9,24 @@
 #define TRIGGERPIN  2  // Sensor trigger pin.
 #define ECHOPIN     6  // Sensor echo pin.
 #define DIST 200 
+
 ZumoBuzzer buzzer;
 ZumoMotors motors;
 NewPing sonar(TRIGGERPIN, ECHOPIN, DIST); // NewPing setup of pins and maximum distance.
 
 unsigned int sensors[6];
 ZumoReflectanceSensorArray reflectSensors(QTR_NO_EMITTER_PIN);
-
+int msg;
 void setup() 
 {
+  msg = 0;
   Serial.begin(9600);
   while(!Serial);
 }
   
 void loop() 
 {
-  int msg = 0;
+  msg = 0;
   if(Serial.available() > 0)    
     {
        msg = Serial.read();
@@ -39,22 +45,22 @@ void handleMsg(int _msg)
   else if(msg == 'l')
   {
     Serial.println("Turn Left");  
-        motors.setSpeeds(-SPEED, SPEED);
+    motors.setSpeeds(-SPEED, SPEED);
   }
   else if(msg == 'r')
   {
     Serial.println("Turn Right");  
-        motors.setSpeeds(SPEED, -SPEED);
+    motors.setSpeeds(SPEED, -SPEED);
   }
   else if(msg == 'b')
   {
     Serial.println("Move Back");  
-        motors.setSpeeds(-SPEED, -SPEED);
+    motors.setSpeeds(-SPEED, -SPEED);
   }
   else if(msg == 's')
   {
     Serial.println("Stop");
-        motors.setSpeeds(0, 0);
+    motors.setSpeeds(0, 0);
   }
   else if(msg == 'a')
   {
@@ -64,16 +70,16 @@ void handleMsg(int _msg)
   else if(msg == 'i')
   {
     Serial.println("Interrupt");
+    motors.setSpeeds(0, 0);
   }    
   else if(msg == 'o')
   {
     Serial.println("Scan Left");
-    scanRoom(-1); //Inverse values
+    searchRoom(-1); //Inverse values
   }  
   else if(msg == 'p')
   {
-    scanRoom(1);
-  }
+    searchRoom(1);
     Serial.println("Scan Right");
   }
 }
@@ -83,7 +89,7 @@ void autoForward()
    bool interrupt = false;
   while (!interrupt)
   {
-    if(lastCMD == 's')
+    if(msg == 'i')
       interrupt = true;
       
     reflectSensors.read(sensors);
@@ -100,22 +106,22 @@ void autoForward()
     if (avg > EDGELIMIT)
       interrupt = true;
       
-    else if (sensors[0] > WALLLIMIT)
+    else if (sensors[0] > EDGELIMIT)
     {
       // Left Sensors
       motors.setSpeeds(-SPEED, -SPEED);
       delay(100);
       motors.setSpeeds(SPEED, -SPEED);
-      delay(100);
+      delay(250);
       motors.setSpeeds(SPEED, SPEED);
     }
-    else if (sensors[5] > WALLLIMIT)
+    else if (sensors[5] > EDGELIMIT)
     {
       // Right Sensors
       motors.setSpeeds(-SPEED, -SPEED);
       delay(100);
       motors.setSpeeds(-SPEED, SPEED);
-      delay(100);
+      delay(250);
       motors.setSpeeds(SPEED, SPEED);
     }
     else
@@ -126,6 +132,9 @@ void autoForward()
     }
 
   }
+  //Pause the Zumo
+  motors.setSpeeds(0, 0);
+  msg ='i';
 }
 
 void searchRoom(int modifier)
@@ -133,22 +142,25 @@ void searchRoom(int modifier)
     bool objInRoom = false;
   
   motors.setSpeeds(SPEED, SPEED);
-  delay(700);
+  delay(200);
   motors.setSpeeds(modifier * SPEED, modifier * -SPEED);
-  delay(1500);
-  motors.setSpeeds(SPEED, SPEED);
-  delay(100);  
-  motors.setSpeeds(modifier * -SPEED, modifier * SPEED);
+  delay(400);
+ 
 
   for(int i = 0; i < 30; i++)
   {
     delay(50);
     float range = sonar.ping_cm();
     if(range < 17.5 && range > 2)
-      objInRoom = true;
+    {
+            objInRoom = true;
+          buzzer.play("L16 cdegreg4");
+    //while(buzzer.isPlaying());
+    }
+
   }
   
-  motors.setSpeeds(mod * SPEED, modifier * -SPEED);
+  motors.setSpeeds(modifier * SPEED, modifier * -SPEED);
   for(int i = 0; i < 30; i++)
   {
     delay(50);                     // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
